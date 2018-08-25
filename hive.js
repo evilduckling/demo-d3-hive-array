@@ -3,12 +3,17 @@ const graphHeight = 700;
 const hostPerLine = 8;
 const lineThickness = 10;
 const hexaWidth = (graphWidth - 2 * lineThickness) / (hostPerLine + 0.5);
+
+// Constants needed to draw an hexagone.
 const halfHexaWidth = hexaWidth / 2;
 const hexaRadius = hexaWidth / Math.sqrt(3);
 const halfHexaRadius = hexaRadius / 2;
 const vDedalsPerLine = hexaRadius + halfHexaRadius;
 const animationDuration = 1000;
 
+/**
+ * Return the path of an hewagon shape starting at xOffset, yOffset
+ */
 var hexaPath = (xOffset, yOffset) => {
   const path = d3.path();
   path.moveTo(0 + xOffset, halfHexaRadius + yOffset);
@@ -21,11 +26,17 @@ var hexaPath = (xOffset, yOffset) => {
   return path;
 };
 
+/**
+ * Color scale range function.
+ */
 const colorScale = d3
   .scaleLinear()
   .domain([0, 33, 66, 100])
   .range(["#6ED071", "#D09902", "#D45D01", "#A1292E"]);
 
+/**
+ * Get the x position of the upper left corner of the square including the hexagone to draw.
+ */
 const getXPosition = (d, i) => {
   let decal = 0;
   if (Math.floor(i / hostPerLine) % 2 === 1) {
@@ -35,10 +46,16 @@ const getXPosition = (d, i) => {
   return lineThickness + decal + (i % hostPerLine) * hexaWidth;
 };
 
+/**
+ * Get the y position of the upper left corner of the square including the hexagone to draw.
+ */
 const getYPosition = (d, i) => {
   return lineThickness + Math.floor(i / hostPerLine) * vDedalsPerLine;
 };
 
+const delayFunction = (i, currentSize) => Math.max(0, i - currentSize) * 100;
+
+// Set the svg size
 let svg = d3
   .select("svg")
   .attr("width", graphWidth)
@@ -49,11 +66,8 @@ function updateGraph() {
     return;
   }
 
-  console.log(data);
-
   const hexas = svg.selectAll("path").data(data);
   const texts = svg.selectAll("text").data(data);
-
   const currentSize = hexas.size();
 
   // Update
@@ -65,7 +79,7 @@ function updateGraph() {
     .append("path")
     .transition()
     .duration(animationDuration)
-    .delay((d, i) => Math.max(0, i - currentSize) * 100)
+    .delay((d, i) => delayFunction(i, currentSize))
     .attr("d", (d, i) => hexaPath(getXPosition(d, i), getYPosition(d, i)))
     .attr("stroke", "black")
     .attr("stroke-width", lineThickness)
@@ -78,7 +92,7 @@ function updateGraph() {
     .enter()
     .append("text")
     .transition()
-    .delay((d, i) => Math.max(0, i - currentSize) * 100)
+    .delay((d, i) => delayFunction(i, currentSize))
     .duration(animationDuration)
     .attr("x", (d, i) => {
       /*let decal;
@@ -105,18 +119,21 @@ function updateGraph() {
   hexas
     .exit()
     .transition()
-    .delay((d, i) => Math.max(0, i - currentSize) * 100)
+    .delay((d, i) => delayFunction(i, currentSize))
     .duration(animationDuration)
     .remove();
 
   texts
     .exit()
     .transition()
-    .delay((d, i) => Math.max(0, i - currentSize) * 100)
+    .delay((d, i) => delayFunction(i, currentSize))
     .duration(animationDuration)
     .remove();
 }
 
+/**
+ * Randomly changes values from data array.
+ */
 function evolveData() {
   if (!data) {
     return;
@@ -127,8 +144,10 @@ function evolveData() {
   });
 }
 
+// Create fake set of data
 let data = new Array(36).fill(10);
 
+// Refresh host map every 2 seconds
 const looper = () => {
   updateGraph();
   evolveData();
