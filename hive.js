@@ -1,5 +1,5 @@
 const graphWidth = 1000;
-const graphHeight = 700;
+const graphHeight = 1000;
 const hostPerLine = 8;
 const lineThickness = 10;
 const hexaWidth = (graphWidth - 2 * lineThickness) / (hostPerLine + 0.5);
@@ -132,6 +132,16 @@ function evolveData() {
     let v = Math.round(Math.random() * 20) - 10;
     data[index] = Math.min(Math.max(data[index] + v, 0), 100);
   });
+}
+
+function addHost() {
+  data.push(0);
+  updateGraph();
+}
+
+function removeHost() {
+  data.pop();
+  updateGraph();
 }
 
 // Create fake set of data
