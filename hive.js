@@ -95,19 +95,9 @@ function updateGraph() {
     .delay((d, i) => delayFunction(i, currentSize))
     .duration(animationDuration)
     .attr("x", (d, i) => {
-      /*let decal;
-      // Even lines
-      if (Math.floor(i / hostPerLine) % 2 === 0) {
-        decal = -10;
-      } else {
-        // Odd lines
-        decal = halfHexaWidth - 10;
-      }
-      return decal + halfHexaWidth + (i % hostPerLine) * hexaWidth;*/
       return halfHexaWidth + getXPosition(d, i) - 10;
     })
     .attr("y", (d, i) => {
-      // return halfHexaWidth + Math.floor(i / hostPerLine) * vDedalsPerLine + 3;
       return hexaRadius + getYPosition(d, i) + 3;
     })
     .text(d => d + "%")
