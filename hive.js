@@ -1,22 +1,48 @@
-var data;
-const graphWidth = 800;
-const graphHeight = 600;
-const hostPerLine = 6;
-const margin = 3;
-const hostSize = graphWidth / (hostPerLine + 0.5) - margin;
-const halfHostSize = hostSize / 2;
-const vDedals = Math.sqrt(3 / 4) * (hostSize + margin); // Ah Ah !
+const graphWidth = 1000;
+const graphHeight = 700;
+const hostPerLine = 8;
+const lineThickness = 10;
+const hexaWidth = (graphWidth - 2 * lineThickness) / (hostPerLine + 0.5);
+const halfHexaWidth = hexaWidth / 2;
+const hexaRadius = hexaWidth / Math.sqrt(3);
+const halfHexaRadius = hexaRadius / 2;
+const vDedalsPerLine = hexaRadius + halfHexaRadius;
 const animationDuration = 1000;
 
-const svg = d3
-  .select("svg")
-  .attr("width", graphWidth)
-  .attr("height", graphHeight);
+var hexaPath = (xOffset, yOffset) => {
+  const path = d3.path();
+  path.moveTo(0 + xOffset, halfHexaRadius + yOffset);
+  path.lineTo(halfHexaWidth + xOffset, 0 + yOffset);
+  path.lineTo(hexaWidth + xOffset, halfHexaRadius + yOffset);
+  path.lineTo(hexaWidth + xOffset, hexaRadius + halfHexaRadius + yOffset);
+  path.lineTo(halfHexaWidth + xOffset, hexaRadius * 2 + yOffset);
+  path.lineTo(0 + xOffset, hexaRadius + halfHexaRadius + yOffset);
+  path.closePath();
+  return path;
+};
 
 const colorScale = d3
   .scaleLinear()
   .domain([0, 33, 66, 100])
   .range(["#6ED071", "#D09902", "#D45D01", "#A1292E"]);
+
+const getXPosition = (d, i) => {
+  let decal = 0;
+  if (Math.floor(i / hostPerLine) % 2 === 1) {
+    // Odd lines
+    decal = halfHexaWidth;
+  }
+  return lineThickness + decal + (i % hostPerLine) * hexaWidth;
+};
+
+const getYPosition = (d, i) => {
+  return lineThickness + Math.floor(i / hostPerLine) * vDedalsPerLine;
+};
+
+let svg = d3
+  .select("svg")
+  .attr("width", graphWidth)
+  .attr("height", graphHeight);
 
 function updateGraph() {
   if (!data) {
@@ -25,38 +51,28 @@ function updateGraph() {
 
   console.log(data);
 
-  let circles = svg.selectAll("circle").data(data);
-  let texts = svg.selectAll("text").data(data);
+  const hexas = svg.selectAll("path").data(data);
+  const texts = svg.selectAll("text").data(data);
 
-  let currentSize = circles.size();
+  const currentSize = hexas.size();
 
   // Update
-  circles.attr("fill", d => colorScale(d));
+  hexas.attr("fill", colorScale);
   texts.text(d => d + "%");
 
-  circles
+  hexas
     .enter()
-    .append("circle")
+    .append("path")
     .transition()
     .duration(animationDuration)
     .delay((d, i) => Math.max(0, i - currentSize) * 100)
-    .attr("r", halfHostSize)
-    .attr("cx", (d, i) => {
-      let decal;
-      // Even lines
-      if (Math.floor(i / hostPerLine) % 2 === 0) {
-        decal = 0;
-      } else {
-        // Odd lines
-        decal = halfHostSize;
-      }
-      return decal + halfHostSize + (i % hostPerLine) * (hostSize + margin);
-    })
-    .attr("cy", (d, i) => {
-      return halfHostSize + Math.floor(i / hostPerLine) * vDedals;
-    })
-    .attr("fill", d => colorScale(d))
-    .attr("stroke", "black");
+    .attr("d", (d, i) => hexaPath(getXPosition(d, i), getYPosition(d, i)))
+    .attr("stroke", "black")
+    .attr("stroke-width", lineThickness)
+    .attr("fill", colorScale)
+    .attr("r", halfHexaWidth)
+    .attr("x", getXPosition)
+    .attr("y", getYPosition);
 
   texts
     .enter()
@@ -65,18 +81,20 @@ function updateGraph() {
     .delay((d, i) => Math.max(0, i - currentSize) * 100)
     .duration(animationDuration)
     .attr("x", (d, i) => {
-      let decal;
+      /*let decal;
       // Even lines
       if (Math.floor(i / hostPerLine) % 2 === 0) {
         decal = -10;
       } else {
         // Odd lines
-        decal = halfHostSize - 10;
+        decal = halfHexaWidth - 10;
       }
-      return decal + halfHostSize + (i % hostPerLine) * (hostSize + margin);
+      return decal + halfHexaWidth + (i % hostPerLine) * hexaWidth;*/
+      return halfHexaWidth + getXPosition(d, i) - 10;
     })
     .attr("y", (d, i) => {
-      return halfHostSize + Math.floor(i / hostPerLine) * vDedals + 3;
+      // return halfHexaWidth + Math.floor(i / hostPerLine) * vDedalsPerLine + 3;
+      return hexaRadius + getYPosition(d, i) + 3;
     })
     .text(d => d + "%")
     .attr("fill", "#FFFFFF")
@@ -84,7 +102,7 @@ function updateGraph() {
     .attr("font-weight", "bold")
     .attr("font-family", "Lucida Grande");
 
-  circles
+  hexas
     .exit()
     .transition()
     .delay((d, i) => Math.max(0, i - currentSize) * 100)
@@ -103,27 +121,19 @@ function evolveData() {
   if (!data) {
     return;
   }
-
-  let add = Math.round(Math.random() * 2);
-  let addOrRemove = Math.round(Math.random());
-  for (let i = 0; i < add; i++) {
-    if (addOrRemove === 0) {
-      data.pop();
-    } else {
-      data.push(Math.round(Math.random() * 100));
-    }
-  }
   data.forEach((element, index) => {
     let v = Math.round(Math.random() * 20) - 10;
     data[index] = Math.min(Math.max(data[index] + v, 0), 100);
   });
 }
 
-const looper = () => {
-  evolveData();
-  updateGraph();
+let data = new Array(36).fill(10);
 
-  setTimeout(looper, 5000);
+const looper = () => {
+  updateGraph();
+  evolveData();
+
+  setTimeout(looper, 2000);
 };
 
 looper();
