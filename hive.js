@@ -2,6 +2,7 @@ const graphWidth = 1000;
 const graphHeight = 1000;
 const hostPerLine = 8;
 const lineThickness = 10;
+const fontSize = 22;
 const hexaWidth = (graphWidth - 2 * lineThickness) / (hostPerLine + 0.5);
 
 // Constants needed to draw an hexagone.
@@ -55,6 +56,8 @@ const getYPosition = (d, i) => {
 
 const delayFunction = (i, currentSize) => Math.max(0, i - currentSize) * 100;
 
+const formatValue = d => d + " %";
+
 // Set the svg size
 let svg = d3
   .select("svg")
@@ -72,7 +75,7 @@ function updateGraph() {
 
   // Update
   hexas.attr("fill", colorScale);
-  texts.text(d => d + "%");
+  texts.text(formatValue);
 
   hexas
     .enter()
@@ -95,22 +98,24 @@ function updateGraph() {
     .delay((d, i) => delayFunction(i, currentSize))
     .duration(animationDuration)
     .attr("x", (d, i) => {
-      return halfHexaWidth + getXPosition(d, i) - 10;
+      return halfHexaWidth + getXPosition(d, i);
     })
     .attr("y", (d, i) => {
-      return hexaRadius + getYPosition(d, i) + 3;
+      return hexaRadius + getYPosition(d, i);
     })
-    .text(d => d + "%")
+    .text(formatValue)
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "central")
     .attr("fill", "#FFFFFF")
-    .attr("font-size", 12)
+    .attr("font-size", fontSize)
     .attr("font-weight", "bold")
     .attr("font-family", "Lucida Grande");
 
   hexas
     .exit()
-    .transition()
-    .delay((d, i) => delayFunction(i, currentSize))
-    .duration(animationDuration)
+    //.transition()
+    //.delay((d, i) => delayFunction(i, currentSize))
+    //.duration(animationDuration)
     .remove();
 
   texts
