@@ -40,18 +40,54 @@ const colorScale = d3
  */
 const getXPosition = (d, i) => {
   let decal = 0;
-  if (Math.floor(i / hostPerLine) % 2 === 1) {
+  if (getLineNumber(i) % 2 === 0) {
     // Odd lines
     decal = halfHexaWidth;
   }
-  return lineThickness + decal + (i % hostPerLine) * hexaWidth;
+  return lineThickness + decal + getPositionOnLine(i) * hexaWidth;
 };
 
 /**
  * Get the y position of the upper left corner of the square including the hexagone to draw.
  */
 const getYPosition = (d, i) => {
-  return lineThickness + Math.floor(i / hostPerLine) * vDedalsPerLine;
+  return lineThickness + getLineNumber(i) * vDedalsPerLine;
+};
+
+/*
+// Classical positions
+const getLineNumber = index => Math.floor(index / hostPerLine);
+const getPositionOnLine = index => index % hostPerLine;
+*/
+
+// Very nice positions
+const getLineNumber = index => {
+  let line = 0;
+  let even = true;
+  while (index >= 0) {
+    if (even) {
+      index -= hostPerLine - 1;
+    } else {
+      index -= hostPerLine;
+    }
+    line++;
+    even = !even;
+  }
+  return line - 1;
+};
+const getPositionOnLine = index => {
+  let even = true;
+  let limit = hostPerLine - 1;
+  while (index >= limit) {
+    index -= limit;
+    even = !even;
+    if (even) {
+      limit = hostPerLine - 1;
+    } else {
+      limit = hostPerLine;
+    }
+  }
+  return index;
 };
 
 const delayFunction = (i, currentSize) => Math.max(0, i - currentSize) * 100;
@@ -150,7 +186,7 @@ function removeHost() {
 }
 
 // Create fake set of data
-let data = new Array(36).fill(10);
+let data = new Array(37).fill(10);
 
 // Refresh host map every 2 seconds
 const looper = () => {
