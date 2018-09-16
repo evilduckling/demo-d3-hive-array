@@ -1,9 +1,9 @@
 const graphWidth = 1000;
 const graphHeight = 1000;
-const hostPerLine = 8;
+const valuePerLine = 8;
 const lineThickness = 10;
 const fontSize = 22;
-const hexaWidth = (graphWidth - 2 * lineThickness) / (hostPerLine + 0.5);
+const hexaWidth = (graphWidth - 2 * lineThickness) / (valuePerLine + 0.5);
 
 // Constants needed to draw an hexagone.
 const halfHexaWidth = hexaWidth / 2;
@@ -33,7 +33,7 @@ var hexaPath = (xOffset, yOffset) => {
 const colorScale = d3
   .scaleLinear()
   .domain([0, 33, 66, 100])
-  .range(["#6ED071", "#D09902", "#D45D01", "#A1292E"]);
+  .range(['#6ED071', '#D09902', '#D45D01', '#A1292E']);
 
 /**
  * Get the x position of the upper left corner of the square including the hexagone to draw.
@@ -54,21 +54,15 @@ const getYPosition = (d, i) => {
   return lineThickness + getLineNumber(i) * vDedalsPerLine;
 };
 
-/*
-// Classical positions
-const getLineNumber = index => Math.floor(index / hostPerLine);
-const getPositionOnLine = index => index % hostPerLine;
-*/
-
 // Very nice positions
 const getLineNumber = index => {
   let line = 0;
   let even = true;
   while (index >= 0) {
     if (even) {
-      index -= hostPerLine - 1;
+      index -= valuePerLine - 1;
     } else {
-      index -= hostPerLine;
+      index -= valuePerLine;
     }
     line++;
     even = !even;
@@ -77,14 +71,14 @@ const getLineNumber = index => {
 };
 const getPositionOnLine = index => {
   let even = true;
-  let limit = hostPerLine - 1;
+  let limit = valuePerLine - 1;
   while (index >= limit) {
     index -= limit;
     even = !even;
     if (even) {
-      limit = hostPerLine - 1;
+      limit = valuePerLine - 1;
     } else {
-      limit = hostPerLine;
+      limit = valuePerLine;
     }
   }
   return index;
@@ -92,60 +86,60 @@ const getPositionOnLine = index => {
 
 const delayFunction = (i, currentSize) => Math.max(0, i - currentSize) * 100;
 
-const formatValue = d => d + " %";
+const formatValue = d => d + ' %';
 
 // Set the svg size
 let svg = d3
-  .select("svg")
-  .attr("width", graphWidth)
-  .attr("height", graphHeight);
+  .select('svg')
+  .attr('width', graphWidth)
+  .attr('height', graphHeight);
 
 function updateGraph() {
   if (!data) {
     return;
   }
 
-  const hexas = svg.selectAll("path").data(data);
-  const texts = svg.selectAll("text").data(data);
+  const hexas = svg.selectAll('path').data(data);
+  const texts = svg.selectAll('text').data(data);
   const currentSize = hexas.size();
 
   // Update
-  hexas.attr("fill", colorScale);
+  hexas.attr('fill', colorScale);
   texts.text(formatValue);
 
   hexas
     .enter()
-    .append("path")
+    .append('path')
     .transition()
     .duration(animationDuration)
     .delay((d, i) => delayFunction(i, currentSize))
-    .attr("d", (d, i) => hexaPath(getXPosition(d, i), getYPosition(d, i)))
-    .attr("stroke", "black")
-    .attr("stroke-width", lineThickness)
-    .attr("fill", colorScale)
-    .attr("r", halfHexaWidth)
-    .attr("x", getXPosition)
-    .attr("y", getYPosition);
+    .attr('d', (d, i) => hexaPath(getXPosition(d, i), getYPosition(d, i)))
+    .attr('stroke', 'black')
+    .attr('stroke-width', lineThickness)
+    .attr('fill', colorScale)
+    .attr('r', halfHexaWidth)
+    .attr('x', getXPosition)
+    .attr('y', getYPosition);
 
   texts
     .enter()
-    .append("text")
+    .append('text')
     .transition()
     .delay((d, i) => delayFunction(i, currentSize))
     .duration(animationDuration)
-    .attr("x", (d, i) => {
+    .attr('x', (d, i) => {
       return halfHexaWidth + getXPosition(d, i);
     })
-    .attr("y", (d, i) => {
+    .attr('y', (d, i) => {
       return hexaRadius + getYPosition(d, i);
     })
     .text(formatValue)
-    .attr("text-anchor", "middle")
-    .attr("alignment-baseline", "central")
-    .attr("fill", "#FFFFFF")
-    .attr("font-size", fontSize)
-    .attr("font-weight", "bold")
-    .attr("font-family", "Lucida Grande");
+    .attr('text-anchor', 'middle')
+    .attr('alignment-baseline', 'central')
+    .attr('fill', '#FFFFFF')
+    .attr('font-size', fontSize)
+    .attr('font-weight', 'bold')
+    .attr('font-family', 'Lucida Grande');
 
   hexas
     .exit()
@@ -175,12 +169,12 @@ function evolveData() {
   });
 }
 
-function addHost() {
+function add() {
   data.push(0);
   updateGraph();
 }
 
-function removeHost() {
+function remove() {
   data.pop();
   updateGraph();
 }
@@ -188,12 +182,8 @@ function removeHost() {
 // Create fake set of data
 let data = new Array(37).fill(10);
 
-// Refresh host map every 2 seconds
-const looper = () => {
+// Refresh map every second
+setInterval(() => {
   updateGraph();
   evolveData();
-
-  setTimeout(looper, 2000);
-};
-
-looper();
+}, 1000);
